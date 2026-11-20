@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.coverage
+htmlcov/
+*.egg-info/
+.DS_Store
+experiments/
+# Keep raw observations and generated models local; preserve directory markers.
+data/raw/**/*.npy
+data/raw/**/*.bin
+data/raw/**/*.txt
+data/raw/**/*.json
+data/processed/**/*.npy
+data/processed/**/*.npz
+data/processed/**/*.csv
+models/*.joblib
+models/*.npz
+models/*.pt
+results/**/*.png
+results/**/*.npy
+results/**/*.npz
+results/**/*.csv
+
