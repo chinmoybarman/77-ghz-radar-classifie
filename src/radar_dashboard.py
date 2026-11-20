@@ -48,11 +48,12 @@ def classify(values, model_paths):
 @st.cache_data(show_spinner=False)
 def bank_scores(model_paths):
     with np.load(EXPERIMENT_ROOT / "processed" / "test.npz", allow_pickle=False) as data:
+        features, spectrograms = data["features"], data["spectrograms"]
         scores = {}
         for name, path in model_paths:
             bundle = dashboard_model(path)
             order = [list(bundle["classes"]).index(label) for label in ("bird", "drone", "human")]
-            scores[name] = model_probabilities(bundle, data["features"], data["spectrograms"])[:, order]
+            scores[name] = model_probabilities(bundle, features, spectrograms)[:, order]
         return scores
 
 
@@ -117,6 +118,14 @@ def main():
     selection = model_selection()
     all_model_paths = tuple((name, row["path"]) for name, row in selection["models"].items())
     model_paths = tuple((name, path) for name, path in all_model_paths if name in model_names)
+    if not model_paths:
+        st.info("Select at least one model in the sidebar.")
+        st.stop()
+    missing = [name for name, path in model_paths if not Path(path).is_file()]
+    if missing:
+        st.warning(f"Train the KTH checkpoints before opening the dashboard. Missing: {', '.join(missing)}.")
+        st.code('python src/kth77_dataset.py --input "<path-to-KTH-archive.npy>" --output-root experiments/kth77_first')
+        st.stop()
 
     record = None
     if source == "Recorded samples":
@@ -124,11 +133,14 @@ def main():
             values, records = samples()
         except (OSError, ValueError, KeyError) as exc:
             st.error(f"Could not open the demo samples: {exc}")
-            st.code("python src/dashboard_data.py --input \"C:\\Users\\chinm\\Downloads\\data_SAAB_SIRS_77GHz_FMCW.npy\"")
+            st.code('python src/dashboard_data.py --input "<path-to-KTH-archive.npy>"')
             st.stop()
-        view = st.selectbox("Example collection", ["Correct demo examples", "All test samples", "Model mistakes / disagreements"])
-        with st.spinner("Preparing the sample collection…"):
-            available = demo_positions(records, bank_scores(all_model_paths), view)
+        view = st.selectbox("Example collection", ["All test samples", "Correct demo examples", "Model mistakes / disagreements"])
+        if view == "All test samples":
+            available = range(len(records))
+        else:
+            with st.spinner("Preparing the sample collection…"):
+                available = demo_positions(records, bank_scores(all_model_paths), view)
         if view == "Correct demo examples":
             st.caption(f"Curated demo · {len(available):,} / {len(records):,} samples: both models match the known label. This filter does not change full-test accuracy.")
         else:
@@ -152,7 +164,7 @@ def main():
     else:
         st.info("Upload one complex, range-compressed 77 GHz sample at a 17 kHz sweep rate. You can download one from Recorded samples first.")
         uploaded = st.file_uploader("Drop a sample here", type=["npz", "npy"], max_upload_size=8,
-            help="The full 1.5 GB dataset is already available through Recorded samples.")
+            help="Recorded samples contains the segments used in the held-out evaluation.")
         with st.expander("Accepted sample formats"):
             st.markdown("**.npz:** a sample exported by this page, including signal settings.\n\n"
                 "**.npy:** a complex array shaped `(150,)`, `(256,)`, `(5,256)` or `(1280,)`. "
@@ -161,15 +173,9 @@ def main():
                 "The Infineon board's raw ADC frames need the separate BGT workflow. Object arrays and model files cannot be uploaded here.")
         if uploaded is None:
             st.caption("Waiting for a sample. Your file stays on this computer.")
-            with st.expander("Need a sample? Download a recorded example", expanded=True):
-                example_values, example_records = samples()
-                correct = demo_positions(example_records, bank_scores(all_model_paths), "Correct demo examples")
-                for column, label in zip(st.columns(3), ("drone", "bird", "human")):
-                    position = next((i for i in correct if example_records[i]["label"] == label), None)
-                    if position is not None:
-                        column.download_button(f"{label.title()} sample", export_sample(example_values[position], example_records[position]),
-                            file_name=f"{label}_sample.npz", mime="application/octet-stream", width="stretch")
-                st.caption("Download one file, then choose it using the Upload button above. These examples are selected because both models match the recorded label.")
+            if (EXPERIMENT_ROOT / "dashboard_samples.npz").is_file() and all(Path(path).is_file() for _, path in all_model_paths):
+                with st.expander("Need a sample? Download a recorded example", expanded=True):
+                    show_example_downloads(all_model_paths)
             st.stop()
         try:
             value, metadata = read_upload(uploaded.getvalue(), uploaded.name)
@@ -182,9 +188,6 @@ def main():
             st.error(f"Cannot classify this file: {exc}")
             st.stop()
 
-    if not model_names:
-        st.info("Select at least one model in the sidebar.")
-        st.stop()
     try:
         with st.spinner("Reading the Doppler signature…"):
             extracted, predictions = classify(value, model_paths)
@@ -241,6 +244,16 @@ def main():
         st.caption("Every evaluated test segment is included here. The correct-example filter affects only which demonstration samples you browse. These measurements do not validate the 60 GHz board or empty-scene detection.")
 
 
+def show_example_downloads(model_paths):
+    example_values, example_records = samples()
+    correct = demo_positions(example_records, bank_scores(model_paths), "Correct demo examples")
+    for column, label in zip(st.columns(3), ("drone", "bird", "human")):
+        position = next((i for i in correct if example_records[i]["label"] == label), None)
+        if position is not None:
+            column.download_button(f"{label.title()} sample", export_sample(example_values[position], example_records[position]),
+                file_name=f"{label}_sample.npz", mime="application/octet-stream", width="stretch")
+    st.caption("Both models match the recorded label on these examples.")
+
+
 if __name__ == "__main__":
     main()
-

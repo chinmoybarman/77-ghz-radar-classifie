@@ -147,6 +147,10 @@ def test_dashboard_switching_samples_models_and_upload_round_trip(monkeypatch):
     app.run(timeout=30)
     assert not app.exception
     assert app.metric[0].label == "Prediction"
+    collection = next(s for s in app.selectbox if s.label == "Example collection")
+    assert collection.value == "All test samples"
+    collection.select("Correct demo examples").run(timeout=20)
+    assert not app.exception
     assert app.metric[0].value == "Drone"
     assert any("Curated demo" in c.value for c in app.caption)
     next(s for s in app.selectbox if s.label == "Recorded target").select("bird").run(timeout=20)
@@ -172,4 +176,3 @@ def test_dashboard_switching_samples_models_and_upload_round_trip(monkeypatch):
     assert not app.exception
     assert len(app.error) == 1
     assert not app.metric  # A failed upload must not leave an earlier prediction visible.
-

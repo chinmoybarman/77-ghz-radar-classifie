@@ -19,7 +19,9 @@ from src.models_ml import model_probabilities
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 EXPERIMENT_ROOT = PROJECT_ROOT / "experiments" / "kth77_first"
-REFINED_ROOT = EXPERIMENT_ROOT.parent / "kth77_refined"
+REFINEMENT_ROOT = EXPERIMENT_ROOT.parent / "kth77_refined"
+FUSION_ROOT = EXPERIMENT_ROOT.parent / "kth77_fusion"
+REFINED_ROOT = FUSION_ROOT if (FUSION_ROOT / "metrics.json").is_file() else REFINEMENT_ROOT
 DOMAIN = "kth77_range_compressed"
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 
@@ -119,16 +121,20 @@ def check_model(bundle):
         raise ValueError("This dashboard expects the saved measured-data models.")
 
 
+def resolve_model_path(saved_path):
+    path = Path(saved_path.replace("\\", "/"))
+    # Older manifests store an absolute path to a model inside experiments.
+    if path.parts[-4:-3] == ("experiments",):
+        path = Path(*path.parts[-4:])
+    return PROJECT_ROOT / path
+
+
 def model_selection():
     """Switch atomically to a completed refinement; keep the baseline as fallback."""
     if (REFINED_ROOT / "metrics.json").exists():
         manifest = json.loads((REFINED_ROOT / "selected_models.json").read_text(encoding="utf-8"))
         for model in manifest["models"].values():
-            path = Path(model["path"].replace("\\", "/"))
-            # Old manifests store an absolute path to a model inside experiments.
-            if path.parts[-4:-3] == ("experiments",):
-                path = Path(*path.parts[-4:])
-            model["path"] = str(PROJECT_ROOT / path)
+            model["path"] = str(resolve_model_path(model["path"]))
         return manifest
     return {"models": {name: {"path": str(EXPERIMENT_ROOT / "models" / filename)}
         for name, filename in (("Random Forest", "rf_kth77.joblib"), ("CNN", "cnn_kth77.pt"))},
@@ -227,4 +233,3 @@ if __name__ == "__main__":
     parser.add_argument("--experiment-root", type=Path, default=EXPERIMENT_ROOT)
     args = parser.parse_args()
     print(prepare_demo_bank(args.input, args.experiment_root))
-

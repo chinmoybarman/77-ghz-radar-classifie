@@ -1,6 +1,6 @@
 # First measured-data experiment: KTH/SAAB 77 GHz
 
-The user-provided `C:\Users\chinm\Downloads\data_SAAB_SIRS_77GHz_FMCW.npy` was inspected and used to train and evaluate separate Random Forest and CNN models on 2 November 2026. The file remains in Downloads and was not modified or copied into the BGT dataset.
+The official `data_SAAB_SIRS_77GHz_FMCW.npy` archive was used to train and evaluate separate Random Forest and CNN models on 2 November 2026.
 
 ## Source verification and inventory
 
@@ -67,14 +67,13 @@ Separate checkpoints are `experiments/kth77_first/models/rf_kth77.joblib` and `c
 From the project directory, choose a new output folder for each run:
 
 ```powershell
-python src/kth77_dataset.py --input 'C:\Users\chinm\Downloads\data_SAAB_SIRS_77GHz_FMCW.npy' --output-root experiments/kth77_second --max-segments-per-measurement 64 --models rf cnn --epochs 8
+python src/kth77_dataset.py --input "$env:USERPROFILE/Downloads/data_SAAB_SIRS_77GHz_FMCW.npy" --output-root experiments/kth77_second --max-segments-per-measurement 64 --models rf cnn --epochs 8
 ```
 
 For inventory only:
 
 ```powershell
-python src/kth77_dataset.py --input 'C:\Users\chinm\Downloads\data_SAAB_SIRS_77GHz_FMCW.npy' --output-root experiments/kth77_inventory --inspect-only
+python src/kth77_dataset.py --input "$env:USERPROFILE/Downloads/data_SAAB_SIRS_77GHz_FMCW.npy" --output-root experiments/kth77_inventory --inspect-only
 ```
 
 `--max-segments-per-measurement 0` processes all eligible segments and requires more computation. It is a new experiment; preserve the same grouping and avoid selecting changes based on the existing test results. No network or radar board is needed once the archive and dependencies are installed.
-

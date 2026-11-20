@@ -13,32 +13,36 @@ The KTH 77 GHz archive contains range-compressed complex signals and now has its
 The first run is saved in `experiments/kth77_first/`: 83.20% RF and 83.35% CNN segment accuracy on 1,423 selected segments from 25 held-out measurements. Classes are bird, drone, and human. Reflectors are excluded; this data has no empty-scene background class. These results apply to external 77 GHz measurements, not BGT60TR13C performance.
 
 ```powershell
-python src/kth77_dataset.py --input 'C:\Users\chinm\Downloads\data_SAAB_SIRS_77GHz_FMCW.npy' --output-root experiments/kth77_second --max-segments-per-measurement 64 --models rf cnn --epochs 8
+python src/kth77_dataset.py --input "$env:USERPROFILE/Downloads/data_SAAB_SIRS_77GHz_FMCW.npy" --output-root experiments/kth77_second --max-segments-per-measurement 64 --models rf cnn --epochs 8
 ```
 
 Choose a new output directory each time. The adapter verifies the official archive before loading, holds out complete measurement rows, excludes edge-truncated segments, and saves source indices, predictions, features, spectrograms, and checkpoints. Full protocol, source checks, limitations, and output links are in [the measured-data report](reports/kth77_experiment.md).
 
 ## Local visual sample classifier
 
-On Windows, double-click `run_dashboard.cmd`. This launcher works when PowerShell script execution is disabled. You can also use `./run_dashboard.ps1` where PowerShell scripts are allowed, or run the direct command:
+On Windows, double-click `run_dashboard.cmd` from the project folder. It uses the project’s `.venv` if present, and opens the local dashboard in your browser. The standalone Documents copy already includes trained models and recorded samples. It needs a working Python environment with the packages in `requirements.txt`.
+
+A fresh GitHub checkout contains source and instructions. Get the official `data_SAAB_SIRS_77GHz_FMCW.npy` from [the KTH Zenodo release](https://zenodo.org/records/5896641) and adjust the path below if you saved it outside Downloads. Run these commands from the checkout to build its local models and recorded examples.
 
 ```powershell
-python -m streamlit run src/radar_dashboard.py --server.address 127.0.0.1 --server.port 8501 --server.headless true --browser.gatherUsageStats false --theme.base dark --theme.primaryColor '#5eead4'
+python -m venv .venv
+$python = './.venv/Scripts/python.exe'
+$archive = "$env:USERPROFILE/Downloads/data_SAAB_SIRS_77GHz_FMCW.npy"
+& $python -m pip install -r requirements.txt
+& $python src/kth77_dataset.py --input $archive --output-root experiments/kth77_first
+& $python src/dashboard_data.py --input $archive
+& $python src/refine_kth77.py
+& $python src/refine_kth77.py --fusion-only
+.\run_dashboard.cmd
 ```
 
-Open **http://127.0.0.1:8501**. Choose **Recorded samples**, then a collection, target, held-out recording, and segment. Predictions update automatically. The default **Correct demo examples** collection contains 1,124 samples where both models match the known label; this is a presentation filter, not an accuracy estimate. Choose **All test samples** for all 1,423 segments or **Model mistakes / disagreements** to inspect the other 299. Compare RF/CNN scores, reference labels, the complex waveform, and the Doppler image. The page does not retrain models or feed reference labels into them.
+Open **http://127.0.0.1:8501**. **Recorded samples** starts with all 1,423 test segments. Choose a target, held-out recording, and segment. The curated and disagreement views filter the recorded examples by the individual models’ results. Compare model scores, reference labels, the complex waveform, and the Doppler image.
 
-The selected CNN improves full-test segment accuracy from 83.35% to **87.56%**; RF remains at 83.20%. A score combination chosen on validation (25% RF, 75% CNN) also reaches 87.56% full-test accuracy. The page reports the combined prediction by default and displays each model's own output. Full results remain visible in the **Full test results** panel regardless of the sample filter. See [the refinement report](reports/dashboard_refinement.md) for the complete protocol and limitations.
+The active blend uses **45% Random Forest and 55% CNN** and reached **88.05% segment accuracy** on the existing 1,423-segment KTH test split, up from **87.56%** for the 25/75 blend. Full results remain visible in the **Full test results** panel regardless of the sample filter. See [the refinement report](reports/dashboard_refinement.md) for the protocol and limitations.
 
 Use **Download this sample**, switch to **Upload a sample**, and upload that `.npz` to try your own input flow. You can also upload one finite complex `.npy` segment shaped `(150,)`, `(256,)`, `(5,256)`, or `(1280,)`; plain arrays assume a 77 GHz carrier and 17 kHz sweep rate. Exported `.npz` files include settings that are checked against the models. Five-cell inputs use the center range cell and 256-sweep inputs use the central 150 samples. Uploads use numeric arrays with pickle disabled, are limited to 8 MB, and remain on this computer. Arbitrary ADC recordings require their own acquisition metadata and processing.
 
-The small sample bank at `experiments/kth77_first/dashboard_samples.npz` contains complex signals from the already evaluated test segments. If rebuilding it on another machine, first run the measured experiment and then:
-
-```powershell
-python src/dashboard_data.py --input 'C:\Users\chinm\Downloads\data_SAAB_SIRS_77GHz_FMCW.npy'
-```
-
-The app loads `experiments/kth77_refined/selected_models.json` when its completed evaluation exists; otherwise it falls back to the original checkpoints. Refined models were selected using validation macro-F1. To reproduce tuning in a new checkout without existing refined output, run `python src/refine_kth77.py`. This preserves the original experiment and refuses to replace an existing refined run. Class scores are uncalibrated; background detection and transfer to the 60 GHz board remain untested. Stop the local server with Ctrl+C in its terminal. The separate BGT raw-recording dashboard remains available through `python src/predict_offline.py --streamlit`.
+The app uses the most advanced completed run available, in order: `kth77_fusion`, `kth77_refined`, and `kth77_first`. The two refinement commands preserve existing output directories. Class scores are uncalibrated. Background detection and transfer to the 60 GHz board remain untested. Stop the local server with Ctrl+C in its terminal. The separate BGT raw-recording dashboard remains available through `python src/predict_offline.py --streamlit`.
 
 ## Run the complete synthetic example
 
@@ -142,4 +146,3 @@ python src/dataset_manager.py --generate-synthetic --output-root . --sessions-pe
 Legacy parsing supports declared 88/92-byte IFRB headers and frame counters with real float32 data. A uint16 payload requires an explicit `payload_dtype` sidecar; unknown encodings are rejected. XML import covers simple leaf/name-value configurations, not every possible vendor document schema.
 
 Slow-time frequencies still alias above the chirp Nyquist rate. Fast-time linear interpolation does not guarantee recovery of missing high-frequency motion. Three-receiver power averaging does not promise a fixed 4.77 dB improvement. The software selects one dominant candidate and does not perform multi-target association. See the report before using these outputs in research claims.
-

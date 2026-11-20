@@ -41,5 +41,18 @@ The **Full test results** panel always includes all 1,423 test segments. Correct
 
 Evidence: [pytest XML](../results/verification/pytest_dashboard_refined.xml). The website runs on loopback with usage telemetry disabled. Its classification domain remains measured 77 GHz range-compressed segments; 60 GHz hardware, empty scenes, and independent-day/target-instance generalization remain untested.
 
-The actual browser flow was also exercised: download a recorded segment, select Upload a sample, select the downloaded `.npz` through the browser file chooser, and verify the same Drone prediction and class scores. A running-server import cache was cleared by restarting the task-owned server before this check. Health endpoint returned `ok`. The finished page is left open with the uploaded sample. Evidence: [browser screenshot](../results/verification/radar_dashboard.jpg). The example file is available at `C:\Users\chinm\Downloads\radar_sample.npz`.
+The browser test downloaded a recorded segment, uploaded the `.npz`, and reproduced the Drone prediction and class scores. The health endpoint returned `ok`. Local evidence is stored under `results/verification/`.
 
+## Standalone release evaluation
+
+The release keeps the refined RF and CNN checkpoints and selects the blend weight by validation segment macro F1. The search tested RF weights from 0 to 1 in increments of 0.05, giving the existing 0.25 weight priority on ties. The selected RF weight was 0.45. Each recording stayed in its original partition.
+
+| Combined model | Validation macro F1 | Test segment accuracy | Test macro F1 | Test drone recall | Test recording accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Previous 25/75 blend | 0.9025 | 87.56% | 0.8525 | 89.38% | 23/25 |
+| Release 45/55 blend | 0.9059 | 88.05% | 0.8576 | 90.00% | 23/25 |
+| Extended CNN seed search | 0.9132 | 86.65% | 0.8393 | 87.81% | 23/25 |
+
+The release got 1,253 of 1,423 segments right, seven more than the previous blend. The extended seed search regressed on the same split, so the app uses the blend with the existing checkpoints. These are retrospective comparisons on a test split previously inspected during development. An independent recording set is needed to estimate generalization, including performance on the BGT60TR13C.
+
+Run `python src/refine_kth77.py --fusion-only` after the original refinement to reproduce the release metrics and confusion matrices in `experiments/kth77_fusion/`. The extended trial can be reproduced with `python src/refine_kth77.py --extended --output-root experiments/kth77_accuracy_run`.

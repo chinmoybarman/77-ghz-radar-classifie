@@ -35,7 +35,6 @@ The feature extraction and TERRM settings are documented adaptations of the pape
 Open PowerShell in the project folder:
 
 ```powershell
-Set-Location 'C:\Users\chinm\Documents\ChatGPT\60 hz mm wave uav detection'
 python -m pytest tests/test_radar_pipeline.py -q
 ```
 
@@ -69,4 +68,3 @@ python src/inspect_raw_recording.py data/raw/drone/day01_hover_2m.npy
 Twenty frames at the nominal frame rate is only a roughly 1.3-second capture test. Build a larger dataset across independent days, scenes, target instances, and conditions. Captures sharing an acquisition session keep the same session ID even if saved to separate files. Register raw files in `data/metadata/recordings.csv`, then train and evaluate on independent real sessions. Use only labels you have measured; a drone/background pilot does not demonstrate bird rejection.
 
 Be ready in stages: synthetic software verified first, external measured-data experiment second, board acquisition and calibration third, and independently evaluated BGT60TR13C classification last.
-
