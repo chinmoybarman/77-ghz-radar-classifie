@@ -1,0 +1,6 @@
+# Install the platform-matching wheel supplied with Infineon's Radar Development Kit.
+# First install requirements.txt. This package is not assumed to be on public PyPI.
+# python -m pip install --no-index --find-links "C:\path\to\RDK\python_wheels" -r requirements-hardware.txt
+# Record the exact installed SDK and firmware versions with each hardware session.
+ifxradarsdk>=3.5,<4
+
