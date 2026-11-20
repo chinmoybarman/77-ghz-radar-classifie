@@ -60,7 +60,7 @@ def sample_metadata():
             "feature_version": FEATURE_VERSION}
 
 
-def read_upload(content, filename):
+def read_upload_with_history(content, filename):
     """Read numeric sample uploads only; never enable pickle for browser files."""
     if not content or len(content) > MAX_UPLOAD_BYTES:
         raise ValueError("Choose a sample smaller than 8 MB; browse the large source archive through Recorded samples.")
@@ -81,7 +81,7 @@ def read_upload(content, filename):
                 if hasattr(loaded, "close"):
                     loaded.close()
                 raise ValueError("Expected a numeric .npy sample.")
-            return central_signal(loaded), {**sample_metadata(), "settings_assumed": True}
+            return central_signal(loaded), {**sample_metadata(), "settings_assumed": True}, None
         if not isinstance(loaded, np.lib.npyio.NpzFile):
             raise ValueError("Expected an exported .npz sample.")
         with loaded:
@@ -93,7 +93,13 @@ def read_upload(content, filename):
             if record is not None and (not isinstance(record, dict)
                     or record.get("label") not in CLASSES):
                 raise ValueError("Invalid reference label metadata in the uploaded sample.")
-            return central_signal(loaded["signal"]), metadata
+            anchor = central_signal(loaded["signal"])
+            history = None
+            if {"history", "times_s"} & set(loaded.files):
+                if not {"history", "times_s"} <= set(loaded.files):
+                    raise ValueError("A scan sequence needs both history and times_s.")
+                history = validate_history(anchor, loaded["history"], loaded["times_s"])
+            return anchor, metadata, history
     except ValueError as exc:
         if "allow_pickle" in str(exc) or "pickled" in str(exc):
             raise ValueError("This file contains Python objects. Use a numeric complex sample exported by this page.") from exc
@@ -102,12 +108,31 @@ def read_upload(content, filename):
         raise ValueError("Cannot read this sample. Use a numeric sample exported by this page.") from exc
 
 
-def export_sample(values, record=None):
+def read_upload(content, filename):
+    anchor, metadata, _ = read_upload_with_history(content, filename)
+    return anchor, metadata
+
+
+def validate_history(anchor, echoes, times):
+    echoes, times = np.asarray(echoes), np.asarray(times)
+    if (echoes.ndim != 2 or echoes.shape[1] != 150 or not len(echoes) or echoes.dtype.kind != "c"
+            or times.shape != (len(echoes),) or times.dtype.kind not in "fiu"
+            or not np.isfinite(echoes).all() or not np.isfinite(times).all()
+            or np.any(np.diff(times.astype(float)) <= 0) or not np.array_equal(echoes[-1], anchor)):
+        raise ValueError("Expected ordered complex (N,150) scans, increasing timestamps and the current scan last.")
+    return echoes, times.astype(float)
+
+
+def export_sample(values, record=None, history=None):
     metadata = sample_metadata()
     if record is not None:
         metadata["source_record"] = record
     buffer = BytesIO()
-    np.savez_compressed(buffer, signal=central_signal(values), metadata_json=json.dumps(metadata))
+    anchor = central_signal(values)
+    arrays = {}
+    if history is not None:
+        arrays["history"], arrays["times_s"] = validate_history(anchor, *history)
+    np.savez_compressed(buffer, signal=anchor, metadata_json=json.dumps(metadata), **arrays)
     return buffer.getvalue()
 
 
@@ -169,12 +194,16 @@ def demo_positions(records, probabilities, view):
     return np.arange(len(records))
 
 
-def analyze_signal(values, bundles):
-    values = central_signal(values)
+def check_variation(values):
     energy = np.mean(np.abs(values) ** 2)
     variation = np.mean(np.abs(values - values.mean()) ** 2)
     if not np.isfinite(energy) or variation <= np.finfo(float).eps * max(energy, np.finfo(float).tiny):
         raise ValueError("This sample has no varying complex signal to classify.")
+
+
+def analyze_signal(values, bundles):
+    values = central_signal(values)
+    check_variation(values)
     extracted = extract_segment_features(values)
     predictions = {}
     for name, bundle in bundles.items():

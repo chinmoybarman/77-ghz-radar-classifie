@@ -1,8 +1,8 @@
-# 60 GHz radar drone classification
+# 77 GHz radar sample classifier and 60 GHz board workflow
 
-Offline Python research software for **Infineon DEMO BGT60TR13C** real IF recordings: raw inspection, range-Doppler processing, MTI, slow-time STFT, experimental fast-time reconstruction, 46 engineered features, Random Forest, TERRM, a compact CNN, and session-separated evaluation.
+This local app classifies recorded KTH 77 GHz radar echoes as bird, drone or human. The trained spectral CNN reached **94.17% accuracy with one scan** and **96.84% with up to nine recent scans** on 1,423 endpoints from 25 held-out recordings. On Windows, launch `run_dashboard.cmd` to browse recordings or upload a compatible sample. The [spectral experiment](reports/kth77_spectral.md) gives class-level results and timing.
 
-The included benchmark is **synthetic only**. It verifies the pipeline, not hardware detection accuracy. The [research report](reports/research_documentation.md) records the source papers, corrected assumptions, and limitations.
+The separate **Infineon DEMO BGT60TR13C** workflow supports real IF capture, raw inspection, range-Doppler processing, MTI, slow-time STFT, experimental fast-time reconstruction, 46 engineered features, Random Forest, TERRM and a compact CNN. Its included 60 GHz benchmark uses synthetic data. Hardware detection accuracy still requires measurements from that board. The [research report](reports/research_documentation.md) documents the board workflow and its limitations.
 
 Review on 2 November 2026: **108 tests passed**. The complete three-model synthetic benchmark, saved-model inference, and Streamlit flows work. A separate KTH adapter has trained RF and CNN models using the user-provided measured archive. The local visual classifier now includes uploads and a validation-tuned CNN. See [KTH experiment results](reports/kth77_experiment.md), [dashboard refinement](reports/dashboard_refinement.md), [verification results](reports/verification.md), and [the pre-board guide](reports/pre_board_guide.md). Start the measured-data website with `./run_dashboard.ps1`.
 
@@ -38,11 +38,20 @@ $archive = "$env:USERPROFILE/Downloads/data_SAAB_SIRS_77GHz_FMCW.npy"
 
 Open **http://127.0.0.1:8501**. **Recorded samples** starts with all 1,423 test segments. Choose a target, held-out recording, and segment. The curated and disagreement views filter the recorded examples by the individual models’ results. Compare model scores, reference labels, the complex waveform, and the Doppler image.
 
-The active blend uses **45% Random Forest and 55% CNN** and reached **88.05% segment accuracy** on the existing 1,423-segment KTH test split, up from **87.56%** for the 25/75 blend. Full results remain visible in the **Full test results** panel regardless of the sample filter. See [the refinement report](reports/dashboard_refinement.md) for the protocol and limitations.
+The original blend uses **45% Random Forest and 55% CNN** and reached **88.05% single-scan accuracy**. The spectral model reads the same central 150 complex sweeps and supports both single-scan and recent-scan decisions. The app defaults to a single scan. Choose **Recent scans** to include valid previous observations of the same target, or **Original RF + CNN** to reproduce the earlier result. The [spectral experiment report](reports/kth77_spectral.md) compares all modes on the same held-out endpoints.
+
+After the base and fusion runs above, train the spectral model from the project folder. On the standalone Windows installation, `venv` contains the Python 3.14 CUDA trainer and `.venv` runs the dashboard on CPU. For a fresh checkout, point `$trainer` at the Python environment with CUDA-enabled PyTorch. A CPU-only installation can use `--device cpu`. For a repeat run, add `--output experiments/kth77_repeat`.
+
+```powershell
+$trainer = './venv/Scripts/python.exe'
+& $trainer -m src.train_kth77_spectral --input $archive --device cuda
+```
+
+To try a timestamped sequence, choose **Recent scans** under **Recorded samples**, select a segment later in a recording, and click **Download these scans**. Select **Upload a sample** and **Recent scans** to replay it. A sequence archive contains `signal`, `metadata_json`, a complex `(N,150)` array named `history` ending at the current scan, and `N` strictly increasing `times_s` values. Each sequence must come from one recording of one target. Single-scan files also work.
 
 Use **Download this sample**, switch to **Upload a sample**, and upload that `.npz` to try your own input flow. You can also upload one finite complex `.npy` segment shaped `(150,)`, `(256,)`, `(5,256)`, or `(1280,)`; plain arrays assume a 77 GHz carrier and 17 kHz sweep rate. Exported `.npz` files include settings that are checked against the models. Five-cell inputs use the center range cell and 256-sweep inputs use the central 150 samples. Uploads use numeric arrays with pickle disabled, are limited to 8 MB, and remain on this computer. Arbitrary ADC recordings require their own acquisition metadata and processing.
 
-The app uses the most advanced completed run available, in order: `kth77_fusion`, `kth77_refined`, and `kth77_first`. The two refinement commands preserve existing output directories. Class scores are uncalibrated. Background detection and transfer to the 60 GHz board remain untested. Stop the local server with Ctrl+C in its terminal. The separate BGT raw-recording dashboard remains available through `python src/predict_offline.py --streamlit`.
+The app enables the spectral modes when both `kth77_spectral` and `kth77_fusion` are available. For earlier runs it can use `kth77_fusion`, `kth77_refined`, or `kth77_first`. Training preserves existing output directories. Class scores are uncalibrated. Background detection and transfer to the 60 GHz board remain untested. Stop the local server with Ctrl+C in its terminal. The separate BGT raw-recording dashboard remains available through `python src/predict_offline.py --streamlit`.
 
 ## Run the complete synthetic example
 
