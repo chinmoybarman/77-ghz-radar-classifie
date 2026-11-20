@@ -1,0 +1,25 @@
+{
+  "sensor": "BGT60TR13C",
+  "board": "DEMO BGT60TR13C / DEMOBGT60TR13CTOBO1",
+  "start_frequency_Hz": 59000000000,
+  "end_frequency_Hz": 61000000000,
+  "sample_rate_Hz": 1000000,
+  "num_samples_per_chirp": 128,
+  "num_chirps_per_frame": 64,
+  "chirp_repetition_time_s": 0.0005,
+  "frame_repetition_time_s": 0.06667,
+  "rx_mask": 7,
+  "tx_mask": 1,
+  "tx_power_level": 31,
+  "if_gain_dB": 33,
+  "hp_cutoff_Hz": 80000,
+  "lp_cutoff_Hz": 500000,
+  "adc_bits": 12,
+  "adc_format": "auto",
+  "data_format": 0,
+  "array_layout": "frames_rx_chirps_samples",
+  "range_min_m": 0.15,
+  "range_max_m": 4.5,
+  "description": "Requested starting configuration, not a hardware-validated profile. Ramp duration is assumed to equal N/fs unless an explicit chirp_duration_s is recorded. Antenna pair phase features require geometry/calibration verification before angle inference."
+}
+
