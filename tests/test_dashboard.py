@@ -176,3 +176,32 @@ def test_dashboard_switching_samples_models_and_upload_round_trip(monkeypatch):
     assert not app.exception
     assert len(app.error) == 1
     assert not app.metric  # A failed upload must not leave an earlier prediction visible.
+
+
+@pytest.mark.skipif(not (EXPERIMENT_ROOT / "dashboard_samples.npz").exists(), reason="local measured artifacts unavailable")
+def test_dashboard_navigation_boundaries_and_analysis_views():
+    from streamlit.testing.v1 import AppTest
+    app = AppTest.from_file(str(EXPERIMENT_ROOT.parents[1] / "src" / "radar_dashboard.py"))
+    app.run(timeout=30)
+    assert not app.exception
+    previous = lambda: next(b for b in app.button if b.label == "Previous")
+    following = lambda: next(b for b in app.button if b.label == "Next")
+    slider = lambda: next(s for s in app.select_slider if s.label == "Sample within recording")
+    assert previous().disabled
+    following().click().run(timeout=20)
+    assert slider().value == 1 and not previous().disabled
+    previous().click().run(timeout=20)
+    assert slider().value == 0 and previous().disabled
+    slider().set_value(len(slider().options) - 1).run(timeout=20)
+    assert following().disabled
+    next(s for s in app.selectbox if s.label == "Recorded target").select("bird").run(timeout=20)
+    assert slider().value == 0
+    assert not app.exception
+    for view in ("Model comparison", "Benchmark", "Signal"):
+        next(r for r in app.radio if r.label == "Analysis view").set_value(view).run(timeout=20)
+        assert not app.exception
+        assert len(app.metric) == 1
+        assert bool(app.dataframe) == (view != "Signal")
+    next(s for s in app.selectbox if s.label == "Signal view").select("Waveform").run(timeout=20)
+    assert not app.exception
+    assert any("amplitude normalized" in c.value for c in app.caption)
