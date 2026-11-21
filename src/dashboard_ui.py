@@ -173,4 +173,4 @@ def benchmark_panel(report, spectral_report):
 
 def footer():
     st.html('<div class="lab-footer"><span>KTH / SAAB · 77 GHz recorded echoes</span>'
-            '<span>Processing and sample uploads stay on this computer</span></div>')
+            '<span>Samples are processed on the server running this app</span></div>')

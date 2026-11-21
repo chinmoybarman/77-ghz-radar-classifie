@@ -1,0 +1,97 @@
+{
+  "models": {
+    "Random Forest": {
+      "path": "experiments\\kth77_first\\models\\rf_kth77.joblib",
+      "macro_f1": 0.861786600496278
+    },
+    "CNN": {
+      "path": "experiments\\kth77_refined\\models\\cnn_32epochs.pt",
+      "macro_f1": 0.8988443617945414
+    }
+  },
+  "fusion_rf_weight": 0.45,
+  "fusion_validation_macro_f1": 0.9059137625001533,
+  "candidates": [
+    {
+      "name": "Random Forest",
+      "candidate": "baseline",
+      "validation_macro_f1": 0.861786600496278
+    },
+    {
+      "name": "CNN",
+      "candidate": "baseline",
+      "validation_macro_f1": 0.8694766032360096
+    },
+    {
+      "name": "Random Forest",
+      "candidate": 0,
+      "max_features": 0.5,
+      "min_samples_leaf": 1,
+      "validation_macro_f1": 0.8514720858608076
+    },
+    {
+      "name": "Random Forest",
+      "candidate": 1,
+      "max_features": 1.0,
+      "min_samples_leaf": 1,
+      "validation_macro_f1": 0.830398733079564
+    },
+    {
+      "name": "Random Forest",
+      "candidate": 2,
+      "max_features": 0.5,
+      "min_samples_leaf": 2,
+      "validation_macro_f1": 0.8553923567178944
+    },
+    {
+      "name": "CNN",
+      "candidate": "32epochs",
+      "validation_macro_f1": 0.8988443617945414
+    }
+  ],
+  "protocol": {
+    "selection": "Fixed checkpoints; highest validation segment macro-F1",
+    "rf_candidates": [
+      {
+        "max_features": 0.5,
+        "min_samples_leaf": 1
+      },
+      {
+        "max_features": 1.0,
+        "min_samples_leaf": 1
+      },
+      {
+        "max_features": 0.5,
+        "min_samples_leaf": 2
+      }
+    ],
+    "rf_trees": 500,
+    "cnn_epochs": 32,
+    "cnn_patience": 7,
+    "seed": 42,
+    "fusion_rf_weights": [
+      0.25,
+      0.0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95,
+      1.0
+    ],
+    "development_note": "The original test results were previously inspected. Tuning uses validation only; a fresh independent test set is still needed."
+  }
+}

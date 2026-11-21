@@ -157,3 +157,10 @@ python src/dataset_manager.py --generate-synthetic --output-root . --sessions-pe
 Legacy parsing supports declared 88/92-byte IFRB headers and frame counters with real float32 data. A uint16 payload requires an explicit `payload_dtype` sidecar; unknown encodings are rejected. XML import covers simple leaf/name-value configurations, not every possible vendor document schema.
 
 Slow-time frequencies still alias above the chirp Nyquist rate. Fast-time linear interpolation does not guarantee recovery of missing high-frequency motion. Three-receiver power averaging does not promise a fixed 4.77 dB improvement. The software selects one dominant candidate and does not perform multi-target association. See the report before using these outputs in research claims.
+
+The cloud demo redistributes selected, cropped scans and derived features from
+[Alexander Karlsson, KTH, Radar measurements on drones, birds and humans with a 77GHz FMCW sensor, v2.0](https://doi.org/10.5281/zenodo.5896641)
+under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The files are repackaged into NumPy archives with generated segment metadata and
+include held-out samples and their recent scan histories. See the KTH experiment
+report above for the measurement selection and processing details.
