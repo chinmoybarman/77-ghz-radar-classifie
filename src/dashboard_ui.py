@@ -15,16 +15,24 @@ def page_style():
       .stApp { background: #0b1018; color: #e6edf5; }
       [data-testid="stHeader"] { background: #0b1018; }
       [data-testid="stSidebar"] { background: #101722; border-right: 1px solid #233042; }
-      .stMainBlockContainer { max-width: 1440px; padding: 4.3rem 2.5rem 2.5rem; }
+      .stMainBlockContainer { max-width: 1440px; padding: 4.3rem 2rem 2rem; }
+      [data-testid="stMarkdownContainer"] p { line-height: 1.55; }
+      [data-testid="stWidgetLabel"] p { color: #dbe7f4; font-size: 1rem; font-weight: 500; }
+      .st-key-recording_panel, .st-key-prediction_panel, .st-key-analysis_panel {
+        background: #111c29; border: 1px solid #35485e !important; border-radius: 14px !important;
+      }
+      .st-key-prediction_panel { border-top: 3px solid #62e5c2 !important; }
+      .st-key-recording_panel hr { margin: .7rem 0; }
       h1, h2, h3 { letter-spacing: -.035em; font-weight: 600 !important; }
       h1 { font-size: 2rem !important; padding-top: .1rem !important; }
       h3 { font-size: 1.15rem !important; }
-      [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color: #9baec3; opacity: 1; }
+      [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color: #b7c8da; opacity: 1; font-size: .95rem; line-height: 1.5; }
       [data-testid="stVerticalBlockBorderWrapper"] > div { border-color: #253246 !important; border-radius: 16px !important; }
       [data-testid="stMetricValue"] { font-size: 2.8rem; font-weight: 600; color: #62e5c2; letter-spacing: -.045em; }
       [data-testid="stMetricLabel"] { color: #a8b8ca; }
       [data-baseweb="select"] > div, [data-testid="stFileUploaderDropzone"] { background: #131e2c; border-color: #2b3d52; }
-      [data-testid="stButton"] button, [data-testid="stDownloadButton"] button { border-color: #314358; border-radius: 9px; }
+      [data-testid="stButton"] button, [data-testid="stDownloadButton"] button { border-color: #4a6079; border-radius: 9px; min-height: 44px; }
+      [data-testid="stButton"] button:hover, [data-testid="stDownloadButton"] button:hover { border-color: #62e5c2; background: #203d3b; }
       button:focus-visible, input:focus-visible, [role="radio"]:focus-visible { outline: 2px solid #62e5c2 !important; outline-offset: 3px; }
       .st-key-source [role="radiogroup"], .st-key-detail [role="radiogroup"] { gap: .35rem; }
       .st-key-source [data-testid="stRadioOption"], .st-key-detail [data-testid="stRadioOption"] {
@@ -32,26 +40,26 @@ def page_style():
       }
       .st-key-source [data-testid="stRadioOption"]:has(input:checked),
       .st-key-detail [data-testid="stRadioOption"]:has(input:checked) { background: #17332f; border-color: #62e5c2; }
-      .lab-brand { display: flex; align-items: center; gap: 12px; margin: .4rem 0 1.8rem; }
+      .lab-brand { display: flex; align-items: center; gap: 12px; margin: .2rem 0 .5rem; }
       .lab-mark { height: 31px; width: 31px; border: 1px solid #62e5c2; border-radius: 50%;
         background: radial-gradient(circle, #62e5c2 0 2px, transparent 3px 8px, #2a6b5d 9px 10px, transparent 11px),
         conic-gradient(from 20deg, #62e5c233, transparent 100deg); }
       .lab-brand strong { font-size: 1rem; letter-spacing: .04em; }
       .lab-brand span { margin-left: auto; font-size: .85rem; color: #a3b3c6; }
-      .lab-specs { display: flex; flex-wrap: wrap; gap: 1.25rem; padding: .8rem 0 1rem; color: #9baec3; font-size: .85rem; }
+      .lab-specs { display: flex; flex-wrap: wrap; gap: 1.25rem; padding: .2rem 0 .5rem; color: #b7c8da; font-size: .95rem; }
       .lab-specs b { color: #e4edf6; font-weight: 500; }
       .lab-status { color: #b5c4d5; font-size: .9rem; margin: .5rem 0 .9rem; }
       .lab-status.ok { color: #62e5c2; }
       .lab-status.review { color: #f2c77b; }
       .lab-score { display: grid; grid-template-columns: 55px 1fr 56px; gap: 12px; align-items: center;
-        margin: .65rem 0; font-size: .9rem; color: #b9c8d9; }
-      .lab-score .track { background: #202f43; height: 7px; border-radius: 8px; overflow: hidden; }
+        margin: .85rem 0; font-size: 1rem; color: #d4e1ef; }
+      .lab-score .track { background: #2c3d52; height: 10px; border-radius: 8px; overflow: hidden; }
       .lab-score .fill { background: #4a6882; height: 100%; border-radius: 8px; }
       .lab-score.active { color: #e6edf5; }
       .lab-score.active .fill { background: #62e5c2; }
       .lab-score .value { text-align: right; font-variant-numeric: tabular-nums; }
       .lab-meta { display: flex; flex-wrap: wrap; gap: 1.4rem; padding: .75rem 0; }
-      .lab-meta div { color: #9baec3; font-size: .82rem; }
+      .lab-meta div { color: #b7c8da; font-size: .95rem; }
       .lab-meta b { display: block; margin-top: .25rem; color: #e3edf8; font-size: .95rem; font-weight: 500; }
       .lab-footer { border-top: 1px solid #263345; margin-top: 2rem; padding-top: 1rem;
         display: flex; justify-content: space-between; flex-wrap: wrap; gap: .6rem; color: #8da2b9; font-size: .8rem; }
@@ -64,7 +72,7 @@ def page_style():
       }
     </style>
     <div class="lab-brand"><div class="lab-mark" aria-hidden="true"></div>
-      <strong>µDOPPLER LAB</strong><span>Local radar analysis</span></div>
+      <strong>µDOPPLER LAB</strong><span>Radar analysis</span></div>
     """)
 
 
@@ -100,11 +108,11 @@ def scores_panel(recommended, record, source):
 
 
 def signal_chart(extracted, view):
-    common = {"background": "transparent", "height": 245,
+    common = {"background": "transparent", "height": 285,
               "config": {"view": {"stroke": None},
                          "axis": {"labelColor": "#a4b6ca", "titleColor": "#b8c8db",
                                   "gridColor": "#263345", "domain": False, "tickColor": "#36465a",
-                                  "labelFontSize": 12, "titleFontSize": 12, "titlePadding": 12},
+                                  "labelFontSize": 14, "titleFontSize": 14, "titlePadding": 12},
                          "legend": {"labelColor": "#bfd0e2", "title": None}}}
     if view == "Waveform":
         values = extracted["signal"]

@@ -170,7 +170,7 @@ def main():
     controls, output = st.columns([1, 2.3], gap="large")
     mode, choice = "single", None
     value = record = position = upload_history = None
-    with controls, st.container(border=True):
+    with controls, st.container(border=True, key="recording_panel"):
         if spectral_report and set(model_names) == set(MODEL_NAMES):
             modes = ["Single scan"]
             if spectral_report["selection"]["sequence"]["window"] > 1 and (
@@ -227,13 +227,13 @@ def main():
             st.error(f"Classification could not finish. {exc}")
             return
         used_scans, span = (len(history[0]), float(history[1][-1]-history[1][0])) if history else (1, 0.)
-        with st.container(border=True):
+        with st.container(border=True, key="prediction_panel"):
             scores_panel(recommended, record, source)
             if mode == "sequence":
                 st.caption(f"Used {used_scans} of up to {choice['window']} consecutive scans spanning {span:.3f} s. History restarts after a gap.")
         detail = st.radio("Analysis view", ["Signal", "Model comparison", "Benchmark"], horizontal=True,
                            key="detail", label_visibility="collapsed")
-        with st.container(border=True):
+        with st.container(border=True, key="analysis_panel"):
             if detail == "Signal":
                 chart = st.selectbox("Signal view", ["Micro-Doppler", "Waveform"], label_visibility="collapsed")
                 signal_chart(extracted, chart)
