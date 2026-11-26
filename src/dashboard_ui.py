@@ -167,6 +167,35 @@ def benchmark_panel(report, spectral_report):
     st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch",
                  column_config={"Accuracy": st.column_config.NumberColumn(format="percent"),
                                 "Macro F1": st.column_config.NumberColumn(format="%.3f")})
+    if spectral_report:
+        st.markdown("**Spectral CNN by target class**")
+        mode = st.selectbox("Evaluation mode", ["Recent scans", "Single scan"])
+        key = "sequence" if mode == "Recent scans" else "single"
+        breakdown = spectral_report["test"][key]["segments"]
+        report_by_class = breakdown["classification_report"]
+        matrix = np.asarray(breakdown["confusion_matrix"])
+        class_rows = []
+        for index, label in enumerate(CLASSES):
+            metrics = report_by_class[label]
+            count = int(metrics["support"])
+            class_rows.append({
+                "Target": label.title(),
+                "Correct": f"{matrix[index, index]:,} / {count:,}",
+                "Recall": metrics["recall"],
+                "Precision": metrics["precision"],
+            })
+        percentages = {
+            name: st.column_config.NumberColumn(format="percent")
+            for name in ("Recall", "Precision")
+        }
+        st.dataframe(pd.DataFrame(class_rows), hide_index=True, width="stretch",
+                     column_config=percentages)
+        st.caption("Recall measures how often each recorded target was recognized. Precision measures how often predictions of that class were correct.")
+        with st.expander("Confusion matrix"):
+            labels = [label.title() for label in CLASSES]
+            counts = pd.DataFrame(matrix, index=labels,
+                                  columns=[f"Predicted {label.lower()}" for label in labels])
+            st.dataframe(counts.rename_axis("Recorded target"), width="stretch")
     st.caption("Model selection used validation recordings. This test split has been inspected during development. New recordings are needed for an independent estimate.")
     st.caption("These results cover bird, drone and human targets in KTH 77 GHz recordings. Background detection and transfer to the 60 GHz board require separate evaluation.")
 
