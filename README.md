@@ -4,9 +4,24 @@ This local app classifies recorded KTH 77 GHz radar echoes as bird, drone or hum
 
 The separate **Infineon DEMO BGT60TR13C** workflow supports real IF capture, raw inspection, range-Doppler processing, MTI, slow-time STFT, experimental fast-time reconstruction, 46 engineered features, Random Forest, TERRM and a compact CNN. Its included 60 GHz benchmark uses synthetic data. Hardware detection accuracy still requires measurements from that board. The [research report](reports/research_documentation.md) documents the board workflow and its limitations.
 
-Review on 2 November 2026: **108 tests passed**. The complete three-model synthetic benchmark, saved-model inference, and Streamlit flows work. A separate KTH adapter has trained RF and CNN models using the user-provided measured archive. The local visual classifier now includes uploads and a validation-tuned CNN. See [KTH experiment results](reports/kth77_experiment.md), [dashboard refinement](reports/dashboard_refinement.md), [verification results](reports/verification.md), and [the pre-board guide](reports/pre_board_guide.md). Start the measured-data website with `./run_dashboard.ps1`.
+Review on 26 November 2026: **117 tests passed**. The complete three-model synthetic benchmark, saved-model inference, and Streamlit flows work. A separate KTH adapter has trained RF and CNN models using the user-provided measured archive. The local visual classifier now includes uploads and a validation-tuned CNN. See [KTH experiment results](reports/kth77_experiment.md), [dashboard refinement](reports/dashboard_refinement.md), [verification results](reports/verification.md), and [the pre-board guide](reports/pre_board_guide.md). Start the measured-data website with `./run_dashboard.ps1`.
 
 The KTH 77 GHz archive contains range-compressed complex signals and now has its own adapter, feature schema, models, and measurement-grouped evaluation. Run it with `src/kth77_dataset.py`, keeping it outside the BGT raw-ADC pipeline. The other multi-sensor dataset still needs a separate adapter. The default BGT profile's ADC Nyquist range is about 4.8 m, with a configured gate ending at 4.5 m; plan initial capture checks within that window.
+
+## Live dashboard and latest experiment
+
+[Open Radar Workbench](https://chinmoy-radar-workbench.streamlit.app/).
+
+The deployed app includes recorded examples, uploads, interactive signal charts,
+per-class precision and recall, and confusion matrices. Streamlit deploys from
+the `codex/streamlit-cloud` branch. The repository includes the checkpoints and
+sample files needed to run this demo.
+
+The [ensemble experiment](reports/kth77_ensemble.md) trained two additional CNNs
+and selected an ensemble using validation recordings. It tied the current
+single-scan test accuracy and scored 96.63% with recent scans. The deployed model
+retains its 96.84% recent-scan result. Detailed machine-readable results are in
+[the experiment metrics](reports/kth77_ensemble_metrics.json).
 
 ## Test the provided measured KTH archive
 
